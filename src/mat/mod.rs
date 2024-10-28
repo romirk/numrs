@@ -1,8 +1,9 @@
 mod iter;
 mod macros;
 
-use iter::element::ElementIterator;
+use crate::mat::iter::IndexedElementIterator;
 pub use iter::Iter;
+use iter::{ElementIterator, IndexIterator};
 use std::fmt::{Display, Formatter};
 use std::intrinsics::unlikely;
 use std::ops::{Add, Index, IndexMut, Mul};
@@ -57,12 +58,8 @@ impl Mat2 {
     }
 
     #[inline]
-    fn idx2d_internal(&self, index: &[usize; 2]) -> usize {
-        if self.row_major {
-            index[0] * self.shape.1 + index[1]
-        } else {
-            index[1] * self.shape.0 + index[0]
-        }
+    pub fn idx2loc(index: &[usize; 2], row_size: usize) -> usize {
+        index[0] * row_size + index[1]
     }
     #[inline]
     fn validate_shape(shape: &Shape) {
@@ -131,8 +128,14 @@ impl Mat2 {
         result
     }
 
-    fn elements(&self) -> ElementIterator {
+    pub fn elements(&self) -> ElementIterator {
         ElementIterator::from(self)
+    }
+    pub fn indices(&self) -> IndexIterator {
+        IndexIterator::from(self.shape)
+    }
+    pub fn pairs(&self) -> IndexedElementIterator {
+        IndexedElementIterator::from(self)
     }
 }
 
@@ -170,12 +173,12 @@ impl Index<[usize; 2]> for Mat2 {
     type Output = Element;
 
     fn index(&self, index: [usize; 2]) -> &Self::Output {
-        &self.data[self.idx2d_internal(&index)]
+        &self.data[Self::idx2loc(&index, if self.row_major { self.shape.1 } else { self.shape.0 })]
     }
 }
 impl IndexMut<[usize; 2]> for Mat2 {
     fn index_mut(&mut self, index: [usize; 2]) -> &mut Self::Output {
-        &mut self.data[self.idx2d_internal(&index)]
+        &mut self.data[Self::idx2loc(&index, if self.row_major { self.shape.1 } else { self.shape.0 })]
     }
 }
 

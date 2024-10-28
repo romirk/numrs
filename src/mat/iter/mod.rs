@@ -1,6 +1,10 @@
 use crate::mat::{Element, Mat2};
 
-pub mod element;
+mod element;
+mod idx;
+
+pub use element::{ElementIterator, IndexedElementIterator};
+pub use idx::IndexIterator;
 
 pub struct Iter<'a> {
     mat: &'a Mat2,

@@ -1,30 +1,58 @@
+use crate::mat::iter::IndexIterator;
 use crate::mat::{Element, Mat2};
+use std::num::NonZero;
+
+pub struct IndexedElementIterator<'a> {
+    data: &'a [Element],
+    idxs: IndexIterator,
+}
 
 pub struct ElementIterator<'a> {
-    mat: &'a Mat2,
-    i: usize,
+    iter: IndexedElementIterator<'a>,
+}
+
+impl<'a> Iterator for IndexedElementIterator<'a> {
+    type Item = ([usize; 2], Element);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let Some(idx) = self.idxs.next() else { return None; };
+        Some((idx, self.data[Mat2::idx2loc(&idx, self.idxs.row_size())]))
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.idxs.size_hint()
+    }
+
+    fn advance_by(&mut self, n: usize) -> Result<(), NonZero<usize>> {
+        self.idxs.advance_by(n)
+    }
 }
 
 impl<'a> Iterator for ElementIterator<'a> {
-    type Item = Element;
+    type Item = ( Element);
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.i >= self.mat.data.len() { return None; }
-        if self.mat.row_major {
-            let pos = self.i;
-            self.i += 1;
-            Some(self.mat.data[pos])
-        } else {
-            let row = self.i / self.mat.shape.1;
-            let col = self.i % self.mat.shape.1;
-            self.i += 1;
-            Some(self.mat.data[col * self.mat.shape.0 + row])
-        }
+        if let Some((_, e)) = self.iter.next() { Some(e) } else { None }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) { self.iter.size_hint() }
+    fn advance_by(&mut self, n: usize) -> Result<(), NonZero<usize>> { self.iter.advance_by(n) }
+}
+
+impl<'a> From<&'a Mat2> for IndexedElementIterator<'a> {
+    fn from(mat: &'a Mat2) -> Self {
+        Self { data: mat.data.as_ref(), idxs: IndexIterator::from(mat.shape) }
     }
 }
 
 impl<'a> From<&'a Mat2> for ElementIterator<'a> {
     fn from(mat: &'a Mat2) -> Self {
-        Self { mat, i: 0 }
+        Self { iter: IndexedElementIterator::from(mat) }
+    }
+}
+
+impl Into<IndexIterator> for IndexedElementIterator<'_> {
+    fn into(self) -> IndexIterator {
+        self.idxs
     }
 }
