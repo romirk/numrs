@@ -7,16 +7,16 @@ macro_rules! count {
 #[macro_export]
 macro_rules! mat {
     ( $( $x:expr ),* ) => { {
-        let data = vec![$($x),*].into_boxed_slice();
-        crate::mat::Mat2 {shape: (1, data.len() as isize) , data, row_major: true }
+        let __mat__data__ = vec![$($x),*].into_boxed_slice();
+        $crate::mat::Mat2::new((1, __mat__data__.len() as usize) , __mat__data__)
     } };
     ( $( $x0:expr ),* ; $($( $x:expr ),*);* ) => {
-        crate::mat::Mat2::new(
+        $crate::mat::Mat2::new(
             (
-                (1isize $(+ 1isize + (if false { [$($x,)*][0] as isize } else { 0 }) )*),
-                (count!($($x0)*)) as isize
+                (1usize + (count!($([$($x,)*])*) as usize)),
+                (count!($($x0)*)) as usize
             ),
-            vec![$( ($x0) as crate::mat::Element, )* $($(($x) as crate::mat::Element, )*)*].into_boxed_slice()
+            vec![$( ($x0) as $crate::mat::Element, )* $($(($x) as $crate::mat::Element, )*)*].into_boxed_slice()
         )
     }
 }

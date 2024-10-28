@@ -15,10 +15,10 @@ impl<'a> Iterator for MatIterator2<'a> {
             self.i += 1;
             Some(self.mat.data[pos])
         } else {
-            let row = self.i / self.mat.shape.1 as usize;
-            let col = self.i % self.mat.shape.1 as usize;
+            let row = self.i / self.mat.shape.1;
+            let col = self.i % self.mat.shape.1;
             self.i += 1;
-            Some(self.mat.data[col * self.mat.shape.0 as usize + row])
+            Some(self.mat.data[col * self.mat.shape.0 + row])
         }
     }
 }

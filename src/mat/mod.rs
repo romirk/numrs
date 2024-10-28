@@ -10,44 +10,43 @@ pub type Element = f32;
 
 #[derive(Debug, Clone)]
 pub struct Mat2 {
-    pub shape: (isize, isize),
+    pub shape: (usize, usize),
     pub data: Box<[Element]>,
     pub(crate) row_major: bool,
 }
 
 impl Mat2 {
-
-    pub fn new(shape: (isize, isize), data: Box<[Element]>) -> Self {
+    pub fn new(shape: (usize, usize), data: Box<[Element]>) -> Self {
         Self {
             shape,
             data,
-             row_major: true
+            row_major: true,
         }
     }
     #[inline]
-    fn idx2d_internal(&self, index: &[isize; 2]) -> usize {
-        (if self.row_major { index[0] * (self.shape.0) + index[1] } else { index[1] * self.shape.0 + index[0] }) as usize
+    fn idx2d_internal(&self, index: &[usize; 2]) -> usize {
+        if self.row_major { index[0] * (self.shape.0) + index[1] } else { index[1] * self.shape.0 + index[0] }
     }
     #[inline]
-    fn validate_shape(shape: &(isize, isize)) {
+    fn validate_shape(shape: &(usize, usize)) {
         assert!(shape.0 > 0 && shape.1 > 0, "Dimension must be positive");
     }
 
-    pub(crate) fn zeroes(shape: (isize, isize)) -> Self {
+    pub(crate) fn zeroes(shape: (usize, usize)) -> Self {
         Self::validate_shape(&shape);
         Self {
             shape,
-            data: vec![0.0; shape.0 as usize * shape.1 as usize].into_boxed_slice(),
+            data: vec![0.0; shape.0 * shape.1].into_boxed_slice(),
             row_major: true,
         }
     }
 
-    pub(crate) fn identity(shape: (isize, isize)) -> Self {
+    pub(crate) fn identity(shape: (usize, usize)) -> Self {
         Self::validate_shape(&shape);
         assert_eq!(shape.0, shape.1, "Identity matrices must be squares");
-        let mut data = vec![0.0; shape.0 as usize * shape.1 as usize].into_boxed_slice();
+        let mut data = vec![0.0; shape.0 * shape.1].into_boxed_slice();
         for i in 0..shape.0 {
-            let pos = (i * shape.0 + i) as usize;
+            let pos = i * shape.0 + i;
             data[pos] = 1.0;
         }
         Self {
@@ -109,8 +108,8 @@ impl Index<usize> for Mat2 {
     type Output = [Element];
 
     fn index(&self, index: usize) -> &Self::Output {
-        if unlikely(index >= self.shape.0 as usize) { panic!("Index out of bounds"); }
-        let cols = self.shape.1 as usize;
+        if unlikely(index >= self.shape.0) { panic!("Index out of bounds"); }
+        let cols = self.shape.1;
         let left = index * cols;
         let right = (index + 1) * cols;
         if self.row_major {
@@ -121,15 +120,15 @@ impl Index<usize> for Mat2 {
     }
 }
 
-impl Index<[isize; 2]> for Mat2 {
+impl Index<[usize; 2]> for Mat2 {
     type Output = Element;
 
-    fn index(&self, index: [isize; 2]) -> &Self::Output {
+    fn index(&self, index: [usize; 2]) -> &Self::Output {
         &self.data[self.idx2d_internal(&index)]
     }
 }
-impl IndexMut<[isize; 2]> for Mat2 {
-    fn index_mut(&mut self, index: [isize; 2]) -> &mut Self::Output {
+impl IndexMut<[usize; 2]> for Mat2 {
+    fn index_mut(&mut self, index: [usize; 2]) -> &mut Self::Output {
         &mut self.data[self.idx2d_internal(&index)]
     }
 }
@@ -159,7 +158,7 @@ impl Mul for &Mat2 {
 impl Display for Mat2 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         for (i, e) in MatIterator2::from(self).enumerate() {
-            if i % self.shape.1 as usize == 0 {
+            if i % self.shape.1 == 0 {
                 write!(f, "\n")?;
             }
             write!(f, "{} ", e)?;
