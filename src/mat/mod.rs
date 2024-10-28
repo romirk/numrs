@@ -1,7 +1,8 @@
 mod iter;
 mod macros;
 
-use iter::MatIterator2;
+use iter::element::ElementIterator;
+pub use iter::Iter;
 use std::fmt::{Display, Formatter};
 use std::intrinsics::unlikely;
 use std::ops::{Add, Index, IndexMut, Mul};
@@ -106,7 +107,7 @@ impl Mat2 {
         if self.row_major { self } else {
             Self {
                 shape: self.shape,
-                data: MatIterator2::from(&self).collect(),
+                data: ElementIterator::from(&self).collect(),
                 row_major: true,
             }
         }
@@ -129,6 +130,10 @@ impl Mat2 {
         }
         result
     }
+
+    fn elements(&self) -> ElementIterator {
+        ElementIterator::from(self)
+    }
 }
 
 
@@ -138,7 +143,7 @@ impl PartialEq<Self> for Mat2 {
         if self.row_major == other.row_major {
             self.data == other.data
         } else {
-            MatIterator2::from(self).zip(MatIterator2::from(other)).all(|(x, y)| x == y)
+            ElementIterator::from(self).zip(ElementIterator::from(other)).all(|(x, y)| x == y)
         }
     }
 }
@@ -182,7 +187,7 @@ impl Add for &Mat2 {
         Mat2 {
             shape: self.shape,
             row_major: true,
-            data: MatIterator2::from(self).zip(MatIterator2::from(rhs)).map(|(x, y)| x + y).collect(),
+            data: ElementIterator::from(self).zip(ElementIterator::from(rhs)).map(|(x, y)| x + y).collect(),
         }
     }
 }
@@ -198,7 +203,7 @@ impl Mul for &Mat2 {
 
 impl Display for Mat2 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        for (i, e) in MatIterator2::from(self).enumerate() {
+        for (i, e) in ElementIterator::from(self).enumerate() {
             if i % self.shape.1 == 0 {
                 write!(f, "\n")?;
             }
@@ -214,5 +219,14 @@ where
 {
     fn from(value: [[Element; N]; M]) -> Self {
         Self::new_from_arrays(value)
+    }
+}
+
+impl<'a> IntoIterator for &'a Mat2 {
+    type Item = <Iter<'a> as Iterator>::Item;
+    type IntoIter = Iter<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        Iter::from(self)
     }
 }

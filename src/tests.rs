@@ -9,7 +9,7 @@ fn sanity() {
 #[test]
 fn index() {
     let mat = mat![1, 0; 0, 1];
-    assert_eq!(mat[1], [0 as Element, 1 as Element]);
+    assert_eq!(mat[1], [0 as Element, 1]);
     assert_eq!(mat[0][1], 0 as Element);
 }
 
@@ -56,4 +56,12 @@ fn matmul() {
     ];
 
     assert_eq!(A * B, C);
+}
+
+#[test]
+fn iter() {
+    let rows = [[1 as Element, 0, 0], [0, 1, 0], [0, 0, 1]];
+    for (i, e) in Mat2::I(3).into_iter().enumerate() {
+        assert_eq!(e, rows[i]);
+    }
 }

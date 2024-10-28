@@ -1,17 +1,17 @@
-use super::{Element, Mat2};
+use crate::mat::{Element, Mat2};
 
-pub struct MatIterator2<'a> {
+pub struct ElementIterator<'a> {
     mat: &'a Mat2,
     i: usize,
 }
 
-impl<'a> Iterator for MatIterator2<'a> {
+impl<'a> Iterator for ElementIterator<'a> {
     type Item = Element;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.i >= self.mat.data.len() { return None; }
         if self.mat.row_major {
-            let pos = self.i.clone();
+            let pos = self.i;
             self.i += 1;
             Some(self.mat.data[pos])
         } else {
@@ -23,11 +23,8 @@ impl<'a> Iterator for MatIterator2<'a> {
     }
 }
 
-impl<'a> From<&'a Mat2> for MatIterator2<'a> {
-    fn from(value: &'a Mat2) -> Self {
-        MatIterator2 {
-            mat: value,
-            i: 0,
-        }
+impl<'a> From<&'a Mat2> for ElementIterator<'a> {
+    fn from(mat: &'a Mat2) -> Self {
+        Self { mat, i: 0 }
     }
 }
