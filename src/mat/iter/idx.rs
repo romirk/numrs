@@ -32,6 +32,7 @@ impl Iterator for IndexIterator {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
+        // we always know how many elements are remaining
         let rem = self.len() - self.i;
         (rem, Some(rem))
     }
@@ -39,10 +40,20 @@ impl Iterator for IndexIterator {
     fn advance_by(&mut self, n: usize) -> Result<(), NonZero<usize>> {
         let jump = self.i + n;
         if jump >= self.len() {
+            self.i = self.len();
             return Err(NonZero::new(jump - self.len() + 1).unwrap());
         }
         self.i = jump;
         Ok(())
+    }
+
+    /// Gets the largest index of the matrix. This means the index of the bottom-right corner.
+    fn max(self) -> Option<Self::Item>
+    where
+        Self: Sized,
+        Self::Item: Ord,
+    {
+        Some([self.shape.0 - 1, self.shape.1 - 1])
     }
 }
 

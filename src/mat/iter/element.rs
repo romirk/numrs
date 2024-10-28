@@ -29,7 +29,7 @@ impl<'a> Iterator for IndexedElementIterator<'a> {
 }
 
 impl<'a> Iterator for ElementIterator<'a> {
-    type Item = ( Element);
+    type Item = Element;
 
     fn next(&mut self) -> Option<Self::Item> {
         if let Some((_, e)) = self.iter.next() { Some(e) } else { None }

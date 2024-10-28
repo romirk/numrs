@@ -19,8 +19,14 @@ pub struct Mat2 {
 }
 
 impl Mat2 {
+    fn validate(shape: &Shape, data: &[Element]) {
+        if shape.0 < 1 || shape.1 < 1 || data.len() != shape.0 * shape.1 {
+            panic!("Invalid matrix dimensions or data size");
+        }
+    }
     #[inline]
     pub fn new(shape: Shape, data: Box<[Element]>) -> Self {
+        Self::validate(&shape, &data);
         Self {
             shape,
             data,
@@ -172,13 +178,23 @@ impl Index<usize> for Mat2 {
 impl Index<[usize; 2]> for Mat2 {
     type Output = Element;
 
-    fn index(&self, index: [usize; 2]) -> &Self::Output {
-        &self.data[Self::idx2loc(&index, if self.row_major { self.shape.1 } else { self.shape.0 })]
+    fn index(&self, mut index: [usize; 2]) -> &Self::Output {
+        if self.row_major {
+            &self.data[Self::idx2loc(&index, self.shape.1)]
+        } else {
+            index.reverse();
+            &self.data[Self::idx2loc(&index, self.shape.0)]
+        }
     }
 }
 impl IndexMut<[usize; 2]> for Mat2 {
-    fn index_mut(&mut self, index: [usize; 2]) -> &mut Self::Output {
-        &mut self.data[Self::idx2loc(&index, if self.row_major { self.shape.1 } else { self.shape.0 })]
+    fn index_mut(&mut self, mut index: [usize; 2]) -> &mut Self::Output {
+        if self.row_major {
+            &mut self.data[Self::idx2loc(&index, self.shape.1)]
+        } else {
+            index.reverse();
+            &mut self.data[Self::idx2loc(&index, self.shape.0)]
+        }
     }
 }
 
