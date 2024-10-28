@@ -1,40 +1,50 @@
-use crate::mat::Mat;
+use crate::count;
+use crate::mat;
+use crate::mat::Mat2;
+
 #[test]
-fn it_works() {
-    let mat = Mat::zeroes(&[2, 2, 2]);
-    println!("{:?}", mat);
-    assert_eq!(Mat::zeroes(&[2, 2, 2]), Mat {
-        shape: vec![2, 2, 2],
-        data: vec![0, 0, 0, 0, 0, 0, 0, 0],
-    });
+fn sanity() {
+    let mat = Mat2 {
+        shape: (2, 2),
+        data: vec![1.0, 0.0, 0.0, 1.0].into_boxed_slice(),
+        row_major: true,
+    };
+    assert_eq!(Mat2::identity((2, 2)), mat);
 }
 
 #[test]
-fn add_zeroes() {
-    let mat1 = &Mat {
-        shape: vec![3, 3],
-        data: vec![1, 0, 0, 0, 1, 0, 0, 0, 1],
+fn index() {
+    let mat = Mat2 {
+        shape: (2, 2),
+        data: vec![1.0, 0.0, 0.0, 1.0].into_boxed_slice(),
+        row_major: true,
     };
-    let mat2 = &Mat::zeroes(&[3, 3]);
-    let mat3 = mat1 + mat2;
-    println!("{:?}", mat3);
-    assert_eq!(*mat1, mat3);
+
+    assert_eq!(mat[1], [0.0, 1.0]);
+    assert_eq!(mat[0][1], 0.0);
 }
 
 #[test]
-fn addition() {
-    let mat1 = &Mat {
-        shape: vec![3, 3],
-        data: vec![1, 0, 0, 0, 1, 0, 0, 0, 1],
+fn transpose() {
+    let mat1 = Mat2::identity((2, 2));
+    let mat2 = Mat2::identity((2, 2));
+    let mat3 = Mat2 {
+        data: vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0].into_boxed_slice(),
+        shape: (3, 2),
+        row_major: true,
     };
-    let mat2 = &Mat {
-        shape: vec![3, 3],
-        data: vec![1, 2, 3, 4, 5, 6, 7, 8, 9],
-    };
-    let mat3 = mat1 + mat2;
-    println!("{:?}", mat3);
-    assert_eq!(mat3, Mat {
-        shape: vec![3, 3],
-        data: vec![2, 2, 3, 4, 6, 6, 7, 8, 10],
-    });
+    assert_eq!(mat1, mat2.transpose());
+    assert_eq!(mat1, mat1.transpose());
+    let t = mat3.transpose();
+    assert_ne!(mat3, t);
+}
+
+#[test]
+fn macro_rules() {
+    let mat = mat![
+        1.0, 0.0, 0.0;
+        0.0, 1.0, 0.0;
+        0.0, 0.0, 1.0
+    ];
+    assert_eq!(mat, Mat2::identity((3, 3)));
 }

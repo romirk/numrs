@@ -1,4 +1,5 @@
+#![feature(core_intrinsics)]
+
 mod mat;
-mod interfaces;
 #[cfg(test)]
 mod tests;
