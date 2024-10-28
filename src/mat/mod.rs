@@ -6,7 +6,7 @@ use std::fmt::{Display, Formatter};
 use std::intrinsics::unlikely;
 use std::ops::{Add, Index, IndexMut, Mul};
 
-pub type Element = f32;
+pub type Element = u32;
 
 #[derive(Debug, Clone)]
 pub struct Mat2 {
@@ -23,6 +23,25 @@ impl Mat2 {
             row_major: true,
         }
     }
+
+    pub(crate) fn new_from_arrays<const N: usize, const M: usize>(array: [[Element; N]; M]) -> Self
+    // TODO figure out what this `where` clause is
+    where
+        [(); M * N]:,
+    {
+        let mut data = Box::new([0.0 as Element; M * N]);
+        for i in 0..M {
+            data[i * N..(i + 1) * N].copy_from_slice(array[i].as_ref());
+        }
+        println!("{:?}", data);
+        Self {
+            shape: (M, N),
+            data,
+            row_major: true,
+        }
+    }
+
+
     #[inline]
     fn idx2d_internal(&self, index: &[usize; 2]) -> usize {
         if self.row_major { index[0] * (self.shape.0) + index[1] } else { index[1] * self.shape.0 + index[0] }
@@ -36,7 +55,7 @@ impl Mat2 {
         Self::validate_shape(&shape);
         Self {
             shape,
-            data: vec![0.0; shape.0 * shape.1].into_boxed_slice(),
+            data: vec![0.0 as Element; shape.0 * shape.1].into_boxed_slice(),
             row_major: true,
         }
     }
@@ -44,10 +63,10 @@ impl Mat2 {
     pub(crate) fn identity(shape: (usize, usize)) -> Self {
         Self::validate_shape(&shape);
         assert_eq!(shape.0, shape.1, "Identity matrices must be squares");
-        let mut data = vec![0.0; shape.0 * shape.1].into_boxed_slice();
+        let mut data = vec![0.0 as Element; shape.0 * shape.1].into_boxed_slice();
         for i in 0..shape.0 {
             let pos = i * shape.0 + i;
-            data[pos] = 1.0;
+            data[pos] = 1.0 as Element;
         }
         Self {
             shape,
@@ -78,7 +97,7 @@ impl Mat2 {
         let mut result = Mat2::zeroes((self.shape.0, rhs.shape.1));
         for i in 0..self.shape.0 {
             for j in 0..rhs.shape.1 {
-                let mut sum = 0.0;
+                let mut sum = 0.0 as Element;
                 for k in 0..self.shape.1 {
                     sum += self[[i, k]] * rhs[[k, j]];
                 }
@@ -164,5 +183,14 @@ impl Display for Mat2 {
             write!(f, "{} ", e)?;
         }
         Ok(())
+    }
+}
+
+impl<const N: usize, const M: usize> From<[[Element; N]; M]> for Mat2
+where
+    [(); M * N]:,
+{
+    fn from(value: [[Element; N]; M]) -> Self {
+        Self::new_from_arrays(value)
     }
 }
