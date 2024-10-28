@@ -1,4 +1,5 @@
 use crate::mat::{Element, Mat2};
+use std::num::NonZero;
 
 mod element;
 mod idx;
@@ -22,6 +23,25 @@ impl<'a> Iterator for Iter<'a> {
         let r = &self.mat[self.row];
         self.row += 1;
         Some(r)
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        if self.row >= self.mat.shape.0 {
+            (0, Some(0))
+        } else {
+            let rem = self.mat.shape.0 - self.row;
+            (rem, Some(rem))
+        }
+    }
+
+    fn advance_by(&mut self, n: usize) -> Result<(), NonZero<usize>> {
+        let jump = self.row + n;
+        if jump >= self.mat.shape.0 {
+            self.row = self.mat.shape.0;
+            return Err(NonZero::new(jump - self.mat.shape.0 + 1).unwrap());
+        }
+        self.row = jump;
+        Ok(())
     }
 }
 

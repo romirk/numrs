@@ -4,7 +4,7 @@ use std::num::NonZero;
 
 pub struct IndexedElementIterator<'a> {
     data: &'a [Element],
-    idxs: IndexIterator,
+    iter: IndexIterator,
 }
 
 pub struct ElementIterator<'a> {
@@ -15,16 +15,16 @@ impl<'a> Iterator for IndexedElementIterator<'a> {
     type Item = ([usize; 2], Element);
 
     fn next(&mut self) -> Option<Self::Item> {
-        let Some(idx) = self.idxs.next() else { return None; };
-        Some((idx, self.data[Mat2::idx2loc(&idx, self.idxs.row_size())]))
+        let Some(idx) = self.iter.next() else { return None; };
+        Some((idx, self.data[Mat2::idx2loc(&idx, self.iter.row_size())]))
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        self.idxs.size_hint()
+        self.iter.size_hint()
     }
 
     fn advance_by(&mut self, n: usize) -> Result<(), NonZero<usize>> {
-        self.idxs.advance_by(n)
+        self.iter.advance_by(n)
     }
 }
 
@@ -41,7 +41,7 @@ impl<'a> Iterator for ElementIterator<'a> {
 
 impl<'a> From<&'a Mat2> for IndexedElementIterator<'a> {
     fn from(mat: &'a Mat2) -> Self {
-        Self { data: mat.data.as_ref(), idxs: IndexIterator::from(mat.shape) }
+        Self { data: mat.data.as_ref(), iter: IndexIterator::from(mat.shape) }
     }
 }
 
@@ -53,6 +53,18 @@ impl<'a> From<&'a Mat2> for ElementIterator<'a> {
 
 impl Into<IndexIterator> for IndexedElementIterator<'_> {
     fn into(self) -> IndexIterator {
-        self.idxs
+        self.iter
+    }
+}
+
+impl<'a> Into<ElementIterator<'a>> for IndexedElementIterator<'a> {
+    fn into(self) -> ElementIterator<'a> {
+        ElementIterator { iter: self }
+    }
+}
+
+impl Into<IndexIterator> for ElementIterator<'_> {
+    fn into(self) -> IndexIterator {
+        self.iter.into()
     }
 }

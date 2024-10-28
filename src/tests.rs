@@ -61,7 +61,11 @@ fn matmul() {
 #[test]
 fn iter() {
     let rows = [[1 as Element, 0, 0], [0, 1, 0], [0, 0, 1]];
-    for (i, e) in Mat2::I(3).into_iter().enumerate() {
-        assert_eq!(e, rows[i]);
+    let mat =  Mat2::I(3);
+    for (i, e) in mat.pairs() {
+        assert_eq!(e, rows[i[0]][i[1]]);
+    }
+    for (i, row) in mat.T().iter().enumerate() {
+        assert_eq!(row, rows[i]);
     }
 }

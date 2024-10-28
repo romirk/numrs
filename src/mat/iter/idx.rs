@@ -33,8 +33,12 @@ impl Iterator for IndexIterator {
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         // we always know how many elements are remaining
-        let rem = self.len() - self.i;
-        (rem, Some(rem))
+        if self.i >= self.len() {
+            (0, Some(0))
+        } else {
+            let rem = self.len() - self.i;
+            (rem, Some(rem))
+        }
     }
 
     fn advance_by(&mut self, n: usize) -> Result<(), NonZero<usize>> {

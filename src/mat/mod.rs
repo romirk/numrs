@@ -1,9 +1,9 @@
 mod iter;
 mod macros;
 
-use crate::mat::iter::IndexedElementIterator;
 pub use iter::Iter;
-use iter::{ElementIterator, IndexIterator};
+
+use iter::{ElementIterator, IndexIterator, IndexedElementIterator};
 use std::fmt::{Display, Formatter};
 use std::intrinsics::unlikely;
 use std::ops::{Add, Index, IndexMut, Mul};
@@ -106,14 +106,12 @@ impl Mat2 {
         }
     }
 
-    pub fn solidify(self) -> Self {
-        if self.row_major { self } else {
-            Self {
-                shape: self.shape,
-                data: ElementIterator::from(&self).collect(),
-                row_major: true,
-            }
+    pub fn finalize(&mut self) -> &Self{
+        if !self.row_major {
+            self.data = self.elements().collect();
+            self.row_major = true;
         }
+        self
     }
 
     fn naive_mul(&self, rhs: &Mat2) -> Mat2 {
@@ -142,6 +140,14 @@ impl Mat2 {
     }
     pub fn pairs(&self) -> IndexedElementIterator {
         IndexedElementIterator::from(self)
+    }
+
+    pub fn iter(&mut self) -> Iter {
+        if self.row_major {
+            self.into_iter()
+        } else {
+            self.finalize().into_iter()
+        }
     }
 }
 
@@ -246,6 +252,9 @@ impl<'a> IntoIterator for &'a Mat2 {
     type IntoIter = Iter<'a>;
 
     fn into_iter(self) -> Self::IntoIter {
+        if !self.row_major {
+            panic!("Column major matrices cannot be iterated over -- call .finalize() first.");
+        }
         Iter::from(self)
     }
 }
