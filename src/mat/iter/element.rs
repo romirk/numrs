@@ -1,10 +1,11 @@
-use crate::mat::iter::IndexIterator;
-use crate::mat::{Element, Mat2};
+use super::loc::LocIterator;
+use crate::mat::mat2::Mat2;
+use crate::mat::{ColumnIterator, Element, RowIterator};
 use std::num::NonZero;
 
 pub struct IndexedElementIterator<'a> {
     data: &'a [Element],
-    iter: IndexIterator,
+    iter: Box<dyn LocIterator>,
 }
 
 pub struct ElementIterator<'a> {
@@ -16,7 +17,12 @@ impl<'a> Iterator for IndexedElementIterator<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         let Some(idx) = self.iter.next() else { return None; };
-        Some((idx, self.data[Mat2::idx2loc(&idx, self.iter.row_size())]))
+        let e = self.data[idx];
+        let coords = [
+            idx / self.iter.row_size(),
+            idx % self.iter.row_size()
+        ];
+        Some((coords, e))
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -41,7 +47,14 @@ impl<'a> Iterator for ElementIterator<'a> {
 
 impl<'a> From<&'a Mat2> for IndexedElementIterator<'a> {
     fn from(mat: &'a Mat2) -> Self {
-        Self { data: mat.data.as_ref(), iter: IndexIterator::from(mat.shape) }
+        Self {
+            data: mat.raw().as_ref(),
+            iter: if mat.row_major() {
+                Box::new(RowIterator::from(mat.shape()))
+            } else {
+                Box::new(ColumnIterator::from(mat.shape()))
+            },
+        }
     }
 }
 
@@ -51,20 +64,9 @@ impl<'a> From<&'a Mat2> for ElementIterator<'a> {
     }
 }
 
-impl Into<IndexIterator> for IndexedElementIterator<'_> {
-    fn into(self) -> IndexIterator {
-        self.iter
-    }
-}
 
 impl<'a> Into<ElementIterator<'a>> for IndexedElementIterator<'a> {
     fn into(self) -> ElementIterator<'a> {
         ElementIterator { iter: self }
-    }
-}
-
-impl Into<IndexIterator> for ElementIterator<'_> {
-    fn into(self) -> IndexIterator {
-        self.iter.into()
     }
 }

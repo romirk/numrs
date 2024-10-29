@@ -1,11 +1,15 @@
-use crate::mat::{Element, Mat2};
+use crate::mat::Element;
 use std::num::NonZero;
 
 mod element;
 mod idx;
+mod loc;
 
 pub use element::{ElementIterator, IndexedElementIterator};
 pub use idx::IndexIterator;
+pub use loc::{ColumnIterator, RowIterator};
+
+use super::Mat2;
 
 pub struct Iter<'a> {
     mat: &'a Mat2,
@@ -15,7 +19,7 @@ pub struct Iter<'a> {
 impl<'a> Iterator for Iter<'a> {
     type Item = &'a [Element];
     fn next(&mut self) -> Option<Self::Item> {
-        if self.row >= self.mat.shape.0 {
+        if self.row >= self.mat.shape().0 {
             return None;
         }
 
@@ -26,19 +30,19 @@ impl<'a> Iterator for Iter<'a> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        if self.row >= self.mat.shape.0 {
+        if self.row >= self.mat.shape().0 {
             (0, Some(0))
         } else {
-            let rem = self.mat.shape.0 - self.row;
+            let rem = self.mat.shape().0 - self.row;
             (rem, Some(rem))
         }
     }
 
     fn advance_by(&mut self, n: usize) -> Result<(), NonZero<usize>> {
         let jump = self.row + n;
-        if jump >= self.mat.shape.0 {
-            self.row = self.mat.shape.0;
-            return Err(NonZero::new(jump - self.mat.shape.0 + 1).unwrap());
+        if jump >= self.mat.shape().0 {
+            self.row = self.mat.shape().0;
+            return Err(NonZero::new(jump - self.mat.shape().0 + 1).unwrap());
         }
         self.row = jump;
         Ok(())

@@ -23,7 +23,8 @@ fn transpose() {
         5, 6
     ];
     assert_eq!(mat1, mat2.T());
-    assert_eq!(mat3[[0, 1]], mat3.T()[[1, 0]]);
+    let lhs = mat3[[0, 1]];
+    assert_eq!(lhs, mat3.T()[[1, 0]]);
 }
 
 #[test]
@@ -55,17 +56,29 @@ fn matmul() {
         -23
     ];
 
-    assert_eq!(A * B, C);
+    assert_eq!(A * B + mat![0; 0; 0], C);
 }
 
 #[test]
 fn iter() {
     let rows = [[1 as Element, 0, 0], [0, 1, 0], [0, 0, 1]];
-    let mat =  Mat2::I(3);
+    let mat = Mat2::I(3);
     for (i, e) in mat.pairs() {
         assert_eq!(e, rows[i[0]][i[1]]);
     }
-    for (i, row) in mat.T().iter().enumerate() {
+    for (i, row) in mat.T().finalize().into_iter().enumerate() {
         assert_eq!(row, rows[i]);
     }
+}
+
+#[test]
+fn reshape() {
+    let mut mat = Mat2::I(4);
+    assert_eq!(
+        mat.reshape((2, 8)),
+        mat![
+            1, 0, 0, 0, 0, 1, 0, 0;
+            0, 0, 1, 0, 0, 0, 0, 1;
+        ]
+    );
 }
