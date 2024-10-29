@@ -7,7 +7,7 @@ mod loc;
 
 pub use element::{ElementIterator, IndexedElementIterator};
 pub use idx::IndexIterator;
-pub use loc::{ColumnIterator, RowIterator};
+pub use loc::{LocIterator};
 
 use super::Mat2;
 

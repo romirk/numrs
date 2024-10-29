@@ -108,7 +108,6 @@ impl Mat2 {
 
     fn reorder(&mut self) -> &Self {
         if !self.row_major {
-            println!("collecting");
             self.data = self.elements().collect();
             self.row_major = true;
         }
@@ -120,7 +119,6 @@ impl Mat2 {
             return self;
         };
         let op = *ob;
-        println!("{}", op);
         match op {
             Op::Finalize => self.reorder(),
             Op::Transpose(op) => {

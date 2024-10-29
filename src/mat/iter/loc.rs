@@ -1,71 +1,41 @@
 use crate::mat::Shape;
 
-pub(crate) trait LocIterator: Iterator<Item = usize> {
-    fn row_size(&self) -> usize;
-    fn len(&self) -> usize;
-}
-pub struct ColumnIterator {
-    shape: Shape,
-    i: usize,
+pub enum LocIterator {
+    RowIterator(Shape, usize),
+    ColumnIterator(Shape, usize),
 }
 
-pub struct RowIterator {
-    shape: Shape,
-    i: usize,
+impl LocIterator {
+    pub(crate) fn row_size(&self) -> usize {
+        match self {
+            LocIterator::RowIterator(shape, _) | LocIterator::ColumnIterator(shape, _) => shape.1
+        }
+    }
 }
 
-impl Iterator for ColumnIterator {
+impl Iterator for LocIterator {
     type Item = usize;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.i >= self.len() {
-            return None;
+        match self {
+            LocIterator::ColumnIterator(shape, ref mut i) => {
+                if *i >= shape.0 * shape.1 {
+                    return None;
+                }
+
+                let row = *i % shape.1;
+                let col = *i / shape.1;
+                *i += 1;
+                Some(row * shape.0 + col)
+            },
+            LocIterator::RowIterator(shape, ref mut i) => {
+                if *i >= shape.0 * shape.1 {
+                    return None;
+                }
+                let pos = *i;
+                *i += 1;
+                Some(pos)
+            }
         }
-
-        let row = self.i % self.shape.1;
-        let col = self.i / self.shape.1;
-        self.i += 1;
-        Some(row * self.shape.0 + col)
-    }
-}
-
-impl Iterator for RowIterator {
-    type Item = usize;
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.i >= self.len() {
-            return None;
-        }
-        let pos = self.i;
-        self.i += 1;
-        Some(pos)
-    }
-}
-
-impl From<Shape> for ColumnIterator {
-    fn from(shape: Shape) -> Self {
-        Self { shape, i: 0 }
-    }
-}
-
-impl From<Shape> for RowIterator {
-    fn from(shape: Shape) -> Self {
-        Self { shape, i: 0 }
-    }
-}
-
-impl LocIterator for ColumnIterator {
-    fn row_size(&self) -> usize {
-        self.shape.1
-    }
-    fn len(&self) -> usize {
-        self.shape.0 * self.shape.1
-    }
-}
-impl LocIterator for RowIterator {
-    fn row_size(&self) -> usize {
-        self.shape.1
-    }
-    fn len(&self) -> usize {
-        self.shape.0 * self.shape.1
     }
 }
